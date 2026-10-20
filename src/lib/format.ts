@@ -5,15 +5,7 @@ function formatDate(date: Date): string {
   return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
-/**
- * The messenger preset has two header styles: plain (for Share/Copy/Telegram,
- * which render as plain text) and WhatsApp (which renders a leading/trailing
- * `*` as bold). `formatList` always returns the plain variant for a given
- * preset; callers that specifically need the WhatsApp-bold variant should
- * pass `whatsappBold: true`.
- */
 export interface FormatOptions {
-  whatsappBold?: boolean;
   /** Injectable for deterministic tests; defaults to `new Date()`. */
   now?: Date;
 }
@@ -25,11 +17,7 @@ export function formatList(
 ): string {
   switch (preset) {
     case 'notes':
-      return formatNotes(list);
-    case 'appleNotes':
-      return formatAppleNotes(list);
-    case 'messenger':
-      return formatMessenger(list, options);
+      return formatNotes(list, options);
     case 'markdown':
       return formatMarkdown(list);
     default:
@@ -37,38 +25,20 @@ export function formatList(
   }
 }
 
-function formatNotes(list: ShoppingListCategory[]): string {
-  const blocks = list.map((category) => {
-    const lines = [category.name, ...category.entries.map((e) => e.name)];
-    return lines.join('\n');
-  });
-  return blocks.join('\n\n');
-}
-
 /**
- * Tailored for sharing into the iPhone Notes app via the Web Share API
- * (iOS surfaces "Notes" as a share target for plain text). Category names
- * stay in their normal casing (not shouted like the messenger preset) and
- * each item gets a ☐ checkbox glyph. Notes doesn't parse this into an
- * interactive checklist, but it reads clearly as one.
+ * Checkbox-style list with a date heading and ALL CAPS category headers —
+ * reads well in Notes, Messages, WhatsApp, and other plain-text share targets.
  */
-function formatAppleNotes(list: ShoppingListCategory[]): string {
-  const blocks = list.map((category) => {
-    const lines = [category.name, ...category.entries.map((e) => `☐ ${e.name}`)];
-    return lines.join('\n');
-  });
-  return blocks.join('\n\n');
-}
+function formatNotes(list: ShoppingListCategory[], options: FormatOptions): string {
+  if (list.length === 0) return '';
 
-function formatMessenger(list: ShoppingListCategory[], options: FormatOptions): string {
   const date = formatDate(options.now ?? new Date());
   const heading = `🛒 Shopping List - ${date}`;
 
   const blocks = list.map((category) => {
     const header = category.name.toUpperCase();
-    const styledHeader = options.whatsappBold ? `*${header}*` : header;
     const lines = category.entries.map((e) => `☐ ${e.name}`);
-    return [styledHeader, ...lines].join('\n');
+    return [header, ...lines].join('\n');
   });
 
   return [heading, ...blocks].join('\n\n');

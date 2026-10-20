@@ -9,8 +9,6 @@ interface PresetSwitchProps {
 
 const options: { value: Preset; label: string }[] = [
   { value: 'notes', label: 'Notes' },
-  { value: 'appleNotes', label: 'iPhone Notes' },
-  { value: 'messenger', label: 'Message' },
   { value: 'markdown', label: 'Markdown' },
 ];
 

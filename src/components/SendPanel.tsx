@@ -1,18 +1,13 @@
 import { useMemo } from 'react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
-import Card from '@mui/material/Card';
 import Paper from '@mui/material/Paper';
 import Stack from '@mui/material/Stack';
-import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import ShareIcon from '@mui/icons-material/Share';
-import TelegramIcon from '@mui/icons-material/Telegram';
-import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import type { Preset, ShoppingListCategory } from '../types';
 import { formatList } from '../lib/format';
-import { DEEP_LINK_MAX_CHARS } from '../config';
 import type { ToastState } from './Toast';
 import { PresetSwitch } from './PresetSwitch';
 
@@ -60,14 +55,8 @@ export function SendPanel({ list, preset, onPresetChange, onToast }: SendPanelPr
   const title = 'StockCheck shopping list';
 
   const text = useMemo(() => formatList(list, preset), [list, preset]);
-  const whatsappText = useMemo(() => formatList(list, 'messenger', { whatsappBold: true }), [list]);
 
   const shareSupported = useMemo(() => canUseNativeShare(text, title), [text]);
-
-  const whatsappEncoded = encodeURIComponent(whatsappText);
-  const telegramEncoded = encodeURIComponent(text);
-  const whatsappTooLong = whatsappEncoded.length > DEEP_LINK_MAX_CHARS;
-  const telegramTooLong = telegramEncoded.length > DEEP_LINK_MAX_CHARS;
 
   async function handleShare() {
     try {
@@ -87,112 +76,57 @@ export function SendPanel({ list, preset, onPresetChange, onToast }: SendPanelPr
     );
   }
 
-  function handleWhatsApp() {
-    window.open(`https://wa.me/?text=${whatsappEncoded}`, '_blank', 'noopener,noreferrer');
-  }
-
-  function handleTelegram() {
-    const appUrl = encodeURIComponent(window.location.origin);
-    window.open(
-      `https://t.me/share/url?url=${appUrl}&text=${telegramEncoded}`,
-      '_blank',
-      'noopener,noreferrer',
-    );
-  }
-
   return (
-    <Card variant="outlined" sx={{ p: 2, borderRadius: 3 }}>
-      <Stack spacing={2}>
-        <Stack
-          direction="row"
-          sx={{ flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 1 }}
-        >
-          <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-            Send list
-          </Typography>
-          <PresetSwitch value={preset} onChange={onPresetChange} />
-        </Stack>
-
-        <Paper
-          variant="outlined"
-          sx={{
-            maxHeight: 192,
-            overflow: 'auto',
-            p: 1.5,
-            bgcolor: 'action.hover',
-            borderRadius: 2,
-          }}
-        >
-          <Typography
-            component="pre"
-            variant="body2"
-            sx={{ whiteSpace: 'pre-wrap', fontFamily: 'monospace', m: 0 }}
-          >
-            {text}
-          </Typography>
-        </Paper>
-
-        <Typography variant="caption" color="text.secondary">
-          For the iPhone Notes app: pick &ldquo;iPhone Notes&rdquo; above, then tap Share and choose
-          Notes — it&rsquo;ll create a new note with checkboxes and categories already formatted in.
-          Messenger (WhatsApp, Messenger, SMS, Telegram) is best reached via Share too — it bolds
-          category headers automatically. Facebook Messenger doesn&rsquo;t support a direct prefill
-          link, so use Share to send there.
+    <Stack spacing={2}>
+      <Stack
+        direction="row"
+        sx={{ flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 1 }}
+      >
+        <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
+          Send list
         </Typography>
+        <PresetSwitch value={preset} onChange={onPresetChange} />
+      </Stack>
 
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-          {shareSupported && (
-            <Button
-              variant="contained"
-              onClick={handleShare}
-              startIcon={<ShareIcon />}
-              sx={{ minHeight: 44, flex: 1 }}
-            >
-              Share
-            </Button>
-          )}
+      <Paper
+        variant="outlined"
+        sx={{
+          maxHeight: 192,
+          overflow: 'auto',
+          p: 1.5,
+          bgcolor: 'action.hover',
+          borderRadius: 2,
+        }}
+      >
+        <Typography
+          component="pre"
+          variant="body2"
+          sx={{ whiteSpace: 'pre-wrap', fontFamily: 'monospace', m: 0 }}
+        >
+          {text}
+        </Typography>
+      </Paper>
+
+      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+        {shareSupported && (
           <Button
-            variant="outlined"
-            onClick={handleCopy}
-            startIcon={<ContentCopyIcon />}
+            variant="contained"
+            onClick={handleShare}
+            startIcon={<ShareIcon />}
             sx={{ minHeight: 44, flex: 1 }}
           >
-            Copy
+            Share
           </Button>
-          <Tooltip
-            title={whatsappTooLong ? 'List too long for a direct link — use Share or Copy' : ''}
-          >
-            <span style={{ flex: 1 }}>
-              <Button
-                variant="outlined"
-                onClick={handleWhatsApp}
-                disabled={whatsappTooLong}
-                startIcon={<WhatsAppIcon />}
-                fullWidth
-                sx={{ minHeight: 44 }}
-              >
-                WhatsApp
-              </Button>
-            </span>
-          </Tooltip>
-          <Tooltip
-            title={telegramTooLong ? 'List too long for a direct link — use Share or Copy' : ''}
-          >
-            <span style={{ flex: 1 }}>
-              <Button
-                variant="outlined"
-                onClick={handleTelegram}
-                disabled={telegramTooLong}
-                startIcon={<TelegramIcon />}
-                fullWidth
-                sx={{ minHeight: 44 }}
-              >
-                Telegram
-              </Button>
-            </span>
-          </Tooltip>
-        </Box>
-      </Stack>
-    </Card>
+        )}
+        <Button
+          variant="outlined"
+          onClick={handleCopy}
+          startIcon={<ContentCopyIcon />}
+          sx={{ minHeight: 44, flex: 1 }}
+        >
+          Copy
+        </Button>
+      </Box>
+    </Stack>
   );
 }

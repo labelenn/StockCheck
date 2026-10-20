@@ -6,6 +6,3 @@ export const STORAGE_KEY = 'stockcheck:v1';
 
 /** localStorage key for the user's light/dark/system theme preference. */
 export const THEME_STORAGE_KEY = 'StockCheck-theme-preference';
-
-/** Deep links (wa.me, t.me) get unreliable beyond this length; fall back to Share/Copy. */
-export const DEEP_LINK_MAX_CHARS = 1800;

@@ -17,7 +17,7 @@ export interface ExtraItem {
   name: string;
 }
 
-export type Preset = 'notes' | 'appleNotes' | 'messenger' | 'markdown';
+export type Preset = 'notes' | 'markdown';
 
 export interface ShoppingListEntry {
   key: ItemKey;

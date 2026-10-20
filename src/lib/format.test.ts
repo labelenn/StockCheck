@@ -29,41 +29,8 @@ const fixedNow = new Date('2026-10-20T12:00:00Z');
 
 describe('formatList', () => {
   describe('notes preset', () => {
-    it('outputs category name then plain item lines, blank line between categories', () => {
-      const result = formatList(sampleList, 'notes');
-      expect(result).toBe('Pantry\nRice\nPasta\n\nBathroom\nToilet paper');
-    });
-
-    it('has no bullets or symbols', () => {
-      const result = formatList(sampleList, 'notes');
-      expect(result).not.toMatch(/[-*☐•]/);
-    });
-
-    it('returns empty string for an empty list', () => {
-      expect(formatList([], 'notes')).toBe('');
-    });
-  });
-
-  describe('appleNotes preset', () => {
-    it('outputs category name then checkbox item lines, blank line between categories', () => {
-      const result = formatList(sampleList, 'appleNotes');
-      expect(result).toBe('Pantry\n☐ Rice\n☐ Pasta\n\nBathroom\n☐ Toilet paper');
-    });
-
-    it('keeps category headers in normal casing (not shouted)', () => {
-      const result = formatList(sampleList, 'appleNotes');
-      expect(result).toContain('Pantry');
-      expect(result).not.toContain('PANTRY');
-    });
-
-    it('returns empty string for an empty list', () => {
-      expect(formatList([], 'appleNotes')).toBe('');
-    });
-  });
-
-  describe('messenger preset', () => {
     it('includes a heading with the date and uppercase category headers with checkbox lines', () => {
-      const result = formatList(sampleList, 'messenger', { now: fixedNow });
+      const result = formatList(sampleList, 'notes', { now: fixedNow });
       expect(result.startsWith('🛒 Shopping List - 20 Oct 2026')).toBe(true);
       expect(result).toContain('PANTRY');
       expect(result).toContain('☐ Rice');
@@ -72,21 +39,14 @@ describe('formatList', () => {
       expect(result).toContain('☐ Toilet paper');
     });
 
-    it('bolds headers with asterisks when whatsappBold is set', () => {
-      const result = formatList(sampleList, 'messenger', { now: fixedNow, whatsappBold: true });
-      expect(result).toContain('*PANTRY*');
-      expect(result).toContain('*BATHROOM*');
-    });
-
-    it('does not bold headers by default', () => {
-      const result = formatList(sampleList, 'messenger', { now: fixedNow });
-      expect(result).not.toContain('*PANTRY*');
-    });
-
     it('is a single plain string with categories separated by blank lines', () => {
-      const result = formatList(sampleList, 'messenger', { now: fixedNow });
+      const result = formatList(sampleList, 'notes', { now: fixedNow });
       const parts = result.split('\n\n');
       expect(parts.length).toBe(3); // heading + 2 categories
+    });
+
+    it('returns empty string for an empty list', () => {
+      expect(formatList([], 'notes')).toBe('');
     });
   });
 
