@@ -53,8 +53,6 @@ export function CategorySection({
       sx={{
         borderRadius: 0,
         overflow: 'hidden',
-        borderLeft: 5,
-        borderColor: accent,
         bgcolor: 'background.paper',
       }}
     >

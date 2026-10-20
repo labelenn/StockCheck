@@ -29,14 +29,15 @@ const fixedNow = new Date('2026-10-20T12:00:00Z');
 
 describe('formatList', () => {
   describe('notes preset', () => {
-    it('includes a heading with the date and uppercase category headers with checkbox lines', () => {
+    it('includes a heading with the date and uppercase category headers without checkbox glyphs', () => {
       const result = formatList(sampleList, 'notes', { now: fixedNow });
       expect(result.startsWith('🛒 Shopping List - 20 Oct 2026')).toBe(true);
       expect(result).toContain('PANTRY');
-      expect(result).toContain('☐ Rice');
-      expect(result).toContain('☐ Pasta');
+      expect(result).toContain('Rice');
+      expect(result).toContain('Pasta');
       expect(result).toContain('BATHROOM');
-      expect(result).toContain('☐ Toilet paper');
+      expect(result).toContain('Toilet paper');
+      expect(result).not.toContain('☐');
     });
 
     it('is a single plain string with categories separated by blank lines', () => {

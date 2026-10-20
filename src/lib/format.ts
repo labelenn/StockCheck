@@ -26,7 +26,7 @@ export function formatList(
 }
 
 /**
- * Checkbox-style list with a date heading and ALL CAPS category headers —
+ * Plain-text list with a date heading and ALL CAPS category headers —
  * reads well in Notes, Messages, WhatsApp, and other plain-text share targets.
  */
 function formatNotes(list: ShoppingListCategory[], options: FormatOptions): string {
@@ -37,7 +37,7 @@ function formatNotes(list: ShoppingListCategory[], options: FormatOptions): stri
 
   const blocks = list.map((category) => {
     const header = category.name.toUpperCase();
-    const lines = category.entries.map((e) => `☐ ${e.name}`);
+    const lines = category.entries.map((e) => e.name);
     return [header, ...lines].join('\n');
   });
 
