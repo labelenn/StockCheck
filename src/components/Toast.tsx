@@ -1,19 +1,33 @@
-interface ToastProps {
-  message: string | null;
+import Alert from '@mui/material/Alert';
+import Snackbar from '@mui/material/Snackbar';
+
+export interface ToastState {
+  message: string;
+  severity: 'success' | 'error';
 }
 
-export function Toast({ message }: ToastProps) {
+interface ToastProps {
+  toast: ToastState | null;
+  onClose: () => void;
+}
+
+export function Toast({ toast, onClose }: ToastProps) {
   return (
-    <div
-      aria-live="polite"
-      role="status"
-      className="pointer-events-none fixed inset-x-0 bottom-20 z-50 flex justify-center px-4 sm:bottom-6"
+    <Snackbar
+      open={!!toast}
+      autoHideDuration={2500}
+      onClose={onClose}
+      anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      sx={{ bottom: { xs: 88, sm: 24 } }}
     >
-      {message && (
-        <div className="rounded-full bg-slate-900 px-4 py-2 text-sm font-medium text-white shadow-lg transition-opacity duration-200 ease-out-soft dark:bg-slate-100 dark:text-slate-900">
-          {message}
-        </div>
-      )}
-    </div>
+      <Alert
+        onClose={onClose}
+        severity={toast?.severity ?? 'success'}
+        variant="filled"
+        sx={{ borderRadius: 3 }}
+      >
+        {toast?.message}
+      </Alert>
+    </Snackbar>
   );
 }

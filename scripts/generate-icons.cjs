@@ -72,10 +72,10 @@ function makeSolidPng(size, [r, g, b]) {
 const outDir = path.join(__dirname, '..', 'public', 'icons');
 fs.mkdirSync(outDir, { recursive: true });
 
-const brandGreen = [22, 163, 74]; // emerald-600
+const brandBlue = [111, 168, 220]; // soft light blue (theme primary.main, light mode)
 
 for (const size of [192, 512]) {
-  const png = makeSolidPng(size, brandGreen);
+  const png = makeSolidPng(size, brandBlue);
   fs.writeFileSync(path.join(outDir, `icon-${size}.png`), png);
   console.log(`Wrote icon-${size}.png`);
 }

@@ -1,14 +1,26 @@
 import { useMemo } from 'react';
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import Card from '@mui/material/Card';
+import Paper from '@mui/material/Paper';
+import Stack from '@mui/material/Stack';
+import Tooltip from '@mui/material/Tooltip';
+import Typography from '@mui/material/Typography';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import ShareIcon from '@mui/icons-material/Share';
+import TelegramIcon from '@mui/icons-material/Telegram';
+import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import type { Preset, ShoppingListCategory } from '../types';
 import { formatList } from '../lib/format';
 import { DEEP_LINK_MAX_CHARS } from '../config';
+import type { ToastState } from './Toast';
 import { PresetSwitch } from './PresetSwitch';
 
 interface SendPanelProps {
   list: ShoppingListCategory[];
   preset: Preset;
   onPresetChange: (preset: Preset) => void;
-  onToast: (message: string) => void;
+  onToast: (toast: ToastState) => void;
 }
 
 function canUseNativeShare(text: string, title: string): boolean {
@@ -62,13 +74,17 @@ export function SendPanel({ list, preset, onPresetChange, onToast }: SendPanelPr
       await navigator.share({ title, text });
     } catch (err) {
       if (err instanceof Error && err.name === 'AbortError') return;
-      onToast('Could not open the share sheet');
+      onToast({ message: 'Could not open the share sheet', severity: 'error' });
     }
   }
 
   async function handleCopy() {
     const ok = await copyText(text);
-    onToast(ok ? 'Copied to clipboard' : 'Could not copy — select the text manually');
+    onToast(
+      ok
+        ? { message: 'Copied to clipboard', severity: 'success' }
+        : { message: 'Could not copy — select the text manually', severity: 'error' },
+    );
   }
 
   function handleWhatsApp() {
@@ -85,62 +101,98 @@ export function SendPanel({ list, preset, onPresetChange, onToast }: SendPanelPr
   }
 
   return (
-    <div className="space-y-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-200">Send list</h2>
-        <PresetSwitch value={preset} onChange={onPresetChange} />
-      </div>
+    <Card variant="outlined" sx={{ p: 2, borderRadius: 3 }}>
+      <Stack spacing={2}>
+        <Stack
+          direction="row"
+          sx={{ flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 1 }}
+        >
+          <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
+            Send list
+          </Typography>
+          <PresetSwitch value={preset} onChange={onPresetChange} />
+        </Stack>
 
-      <pre className="max-h-48 overflow-auto whitespace-pre-wrap rounded-lg bg-slate-50 p-3 text-sm text-slate-700 dark:bg-slate-800 dark:text-slate-200">
-        {text}
-      </pre>
-
-      <p className="text-xs text-slate-400 dark:text-slate-500">
-        Messenger (WhatsApp, Messenger, SMS, Telegram) is best reached via Share — it bolds category
-        headers automatically. Facebook Messenger doesn't support a direct prefill link, so use
-        Share to send there.
-      </p>
-
-      <div className="flex flex-wrap gap-2">
-        {shareSupported && (
-          <button
-            type="button"
-            onClick={handleShare}
-            className="min-h-11 flex-1 rounded-lg bg-emerald-600 px-4 text-sm font-medium text-white transition-colors hover:bg-emerald-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-500"
+        <Paper
+          variant="outlined"
+          sx={{
+            maxHeight: 192,
+            overflow: 'auto',
+            p: 1.5,
+            bgcolor: 'action.hover',
+            borderRadius: 2,
+          }}
+        >
+          <Typography
+            component="pre"
+            variant="body2"
+            sx={{ whiteSpace: 'pre-wrap', fontFamily: 'monospace', m: 0 }}
           >
-            Share
-          </button>
-        )}
-        <button
-          type="button"
-          onClick={handleCopy}
-          className="min-h-11 flex-1 rounded-lg border border-slate-300 px-4 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-500 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
-        >
-          Copy
-        </button>
-        <button
-          type="button"
-          onClick={handleWhatsApp}
-          disabled={whatsappTooLong}
-          title={
-            whatsappTooLong ? 'List too long for a direct link — use Share or Copy' : undefined
-          }
-          className="min-h-11 flex-1 rounded-lg border border-slate-300 px-4 text-sm font-medium text-slate-700 transition-colors enabled:hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-500 dark:border-slate-600 dark:text-slate-200 dark:enabled:hover:bg-slate-800"
-        >
-          WhatsApp
-        </button>
-        <button
-          type="button"
-          onClick={handleTelegram}
-          disabled={telegramTooLong}
-          title={
-            telegramTooLong ? 'List too long for a direct link — use Share or Copy' : undefined
-          }
-          className="min-h-11 flex-1 rounded-lg border border-slate-300 px-4 text-sm font-medium text-slate-700 transition-colors enabled:hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-500 dark:border-slate-600 dark:text-slate-200 dark:enabled:hover:bg-slate-800"
-        >
-          Telegram
-        </button>
-      </div>
-    </div>
+            {text}
+          </Typography>
+        </Paper>
+
+        <Typography variant="caption" color="text.secondary">
+          For the iPhone Notes app: pick &ldquo;iPhone Notes&rdquo; above, then tap Share and choose
+          Notes — it&rsquo;ll create a new note with checkboxes and categories already formatted in.
+          Messenger (WhatsApp, Messenger, SMS, Telegram) is best reached via Share too — it bolds
+          category headers automatically. Facebook Messenger doesn&rsquo;t support a direct prefill
+          link, so use Share to send there.
+        </Typography>
+
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+          {shareSupported && (
+            <Button
+              variant="contained"
+              onClick={handleShare}
+              startIcon={<ShareIcon />}
+              sx={{ minHeight: 44, flex: 1 }}
+            >
+              Share
+            </Button>
+          )}
+          <Button
+            variant="outlined"
+            onClick={handleCopy}
+            startIcon={<ContentCopyIcon />}
+            sx={{ minHeight: 44, flex: 1 }}
+          >
+            Copy
+          </Button>
+          <Tooltip
+            title={whatsappTooLong ? 'List too long for a direct link — use Share or Copy' : ''}
+          >
+            <span style={{ flex: 1 }}>
+              <Button
+                variant="outlined"
+                onClick={handleWhatsApp}
+                disabled={whatsappTooLong}
+                startIcon={<WhatsAppIcon />}
+                fullWidth
+                sx={{ minHeight: 44 }}
+              >
+                WhatsApp
+              </Button>
+            </span>
+          </Tooltip>
+          <Tooltip
+            title={telegramTooLong ? 'List too long for a direct link — use Share or Copy' : ''}
+          >
+            <span style={{ flex: 1 }}>
+              <Button
+                variant="outlined"
+                onClick={handleTelegram}
+                disabled={telegramTooLong}
+                startIcon={<TelegramIcon />}
+                fullWidth
+                sx={{ minHeight: 44 }}
+              >
+                Telegram
+              </Button>
+            </span>
+          </Tooltip>
+        </Box>
+      </Stack>
+    </Card>
   );
 }

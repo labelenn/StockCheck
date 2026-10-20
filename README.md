@@ -25,22 +25,21 @@ category looks like:
 {
   id: 'pantry',
   name: 'Pantry',
-  icon: '🥫',
   items: ['Rice', 'Pasta', 'Olive oil', /* ... */],
 }
 ```
 
 - Add, remove, or rename items freely — just edit the `items` array.
 - Add a whole new category by adding another object to the `categories`
-  array (give it a unique `id`, a `name`, an emoji `icon`, and an `items`
-  list).
+  array (give it a unique `id`, a `name`, and an `items` list).
 - **Note on renaming:** each item's "checked" state is saved against a key
   made from `categoryId + item name`. Renaming an item resets its checked
   state (it'll look unchecked next time), but reordering items or categories
   is safe and won't lose anyone's progress.
-- Category accent colors are mapped by `id` in `src/lib/colors.ts` — add an
-  entry there if you add a new category and want it to have its own color
-  (otherwise it falls back to a neutral gray).
+- Category icons and accent colors are mapped by `id` in
+  `src/lib/categoryStyles.tsx` — add an entry there if you add a new category
+  and want it to have its own icon and color (otherwise it falls back to a
+  neutral default).
 
 ## Changing how long saved state lasts
 
@@ -55,7 +54,7 @@ export const STATE_TTL_DAYS = 7;
 Change the number to adjust how many days of inactivity before the check
 state and extras are discarded (your preferred send format is always kept).
 You can also clear everything immediately at any time with the **Start new
-week** button in the header.
+week** button at the top of the page.
 
 ## Push to GitHub
 

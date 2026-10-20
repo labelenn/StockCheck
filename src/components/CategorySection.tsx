@@ -1,6 +1,19 @@
+import Accordion from '@mui/material/Accordion';
+import AccordionDetails from '@mui/material/AccordionDetails';
+import AccordionSummary from '@mui/material/AccordionSummary';
+import Box from '@mui/material/Box';
+import Chip from '@mui/material/Chip';
+import Divider from '@mui/material/Divider';
+import IconButton from '@mui/material/IconButton';
+import List from '@mui/material/List';
+import Stack from '@mui/material/Stack';
+import Typography from '@mui/material/Typography';
+import AddCircleIcon from '@mui/icons-material/AddCircle';
+import CloseIcon from '@mui/icons-material/Close';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import type { Category, ExtraItem, ItemKey } from '../types';
 import { makeItemKey } from '../types';
-import { getCategoryAccent } from '../lib/colors';
+import { getCategoryStyle } from '../lib/categoryStyles';
 import { ItemRow } from './ItemRow';
 import { ExtraItemInput } from './ExtraItemInput';
 
@@ -21,81 +34,115 @@ export function CategorySection({
   onAddExtra,
   onRemoveExtra,
 }: CategorySectionProps) {
-  const accent = getCategoryAccent(category.id);
+  const { Icon, accent } = getCategoryStyle(category.id);
   const hasEssentials = category.items.length > 0;
   const checkedCount = category.items.filter(
     (item) => checked[makeItemKey(category.id, item)],
   ).length;
   const badgeText = hasEssentials
-    ? `${checkedCount}/${category.items.length} checked`
+    ? `${checkedCount}/${category.items.length}`
     : extras.length > 0
       ? `${extras.length} extra item${extras.length > 1 ? 's' : ''}`
       : 'One-off items';
 
   return (
-    <details
-      open
-      className={`group overflow-hidden rounded-xl border-l-4 bg-white shadow-sm dark:bg-slate-900 ${accent.border}`}
+    <Accordion
+      defaultExpanded
+      disableGutters
+      elevation={0}
+      sx={{
+        borderRadius: 0,
+        overflow: 'hidden',
+        borderLeft: 5,
+        borderColor: accent,
+        bgcolor: 'background.paper',
+      }}
     >
-      <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 [&::-webkit-details-marker]:hidden">
-        <span className="flex items-center gap-2 text-base font-semibold text-slate-800 dark:text-slate-100">
-          <span aria-hidden="true">{category.icon}</span>
-          {category.name}
-        </span>
-        <span className="flex items-center gap-2">
-          <span className={`text-sm font-medium ${accent.text}`}>{badgeText}</span>
-          <span
-            aria-hidden="true"
-            className="text-slate-400 transition-transform duration-200 ease-out-soft group-open:rotate-180"
+      <AccordionSummary
+        expandIcon={<ExpandMoreIcon />}
+        sx={{
+          minHeight: 44,
+          '& .MuiAccordionSummary-content': {
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            rowGap: 0.75,
+            columnGap: 1.5,
+          },
+        }}
+      >
+        <Stack
+          direction="row"
+          spacing={1.5}
+          sx={{ alignItems: 'center', flex: '1 1 auto', minWidth: 0 }}
+        >
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: 32,
+              height: 32,
+              borderRadius: '50%',
+              bgcolor: accent,
+              color: '#fff',
+              flexShrink: 0,
+            }}
           >
-            ▾
-          </span>
-        </span>
-      </summary>
+            <Icon fontSize="small" />
+          </Box>
+          <Typography variant="subtitle1" noWrap sx={{ fontWeight: 700 }}>
+            {category.name}
+          </Typography>
+        </Stack>
+        <Chip
+          label={badgeText}
+          size="small"
+          sx={{ bgcolor: accent, color: '#fff', fontWeight: 600, flexShrink: 0 }}
+        />
+      </AccordionSummary>
 
-      <div className="divide-y divide-slate-100 border-t border-slate-100 dark:divide-slate-800 dark:border-slate-800">
-        {category.items.map((item) => {
-          const key = makeItemKey(category.id, item);
-          return (
-            <ItemRow
-              key={key}
-              id={key}
-              label={item}
-              checked={!!checked[key]}
-              onChange={() => onToggle(key)}
-            />
-          );
-        })}
-        {extras.map((extra) => (
-          <div key={extra.key} className="flex min-h-11 items-stretch">
-            <div className="flex min-h-11 flex-1 items-center gap-3 px-4 py-2">
-              <span
-                aria-hidden="true"
-                className="flex h-5 w-5 flex-shrink-0 items-center justify-center text-sm"
-                title="Extra item — always on the shopping list"
+      <Divider />
+
+      <AccordionDetails sx={{ p: 0 }}>
+        <List disablePadding>
+          {category.items.map((item) => {
+            const key = makeItemKey(category.id, item);
+            return (
+              <ItemRow
+                key={key}
+                id={key}
+                label={item}
+                checked={!!checked[key]}
+                onChange={() => onToggle(key)}
+              />
+            );
+          })}
+          {extras.map((extra) => (
+            <Box key={extra.key} sx={{ display: 'flex', alignItems: 'center' }}>
+              <Stack
+                direction="row"
+                spacing={1.5}
+                sx={{ alignItems: 'center', flex: 1, minHeight: 44, px: 2 }}
               >
-                ➕
-              </span>
-              <span className="text-slate-800 dark:text-slate-100">{extra.name}</span>
-            </div>
-            <button
-              type="button"
-              onClick={() => onRemoveExtra(extra.key)}
-              aria-label={`Remove ${extra.name}`}
-              className="flex w-11 flex-shrink-0 items-center justify-center text-slate-400 transition-colors hover:text-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-500 dark:text-slate-500 dark:hover:text-red-400"
-            >
-              ✕
-            </button>
-          </div>
-        ))}
-      </div>
-
-      <div className="border-t border-slate-100 dark:border-slate-800">
+                <AddCircleIcon fontSize="small" sx={{ color: accent }} />
+                <Typography>{extra.name}</Typography>
+              </Stack>
+              <IconButton
+                aria-label={`Remove ${extra.name}`}
+                onClick={() => onRemoveExtra(extra.key)}
+                sx={{ width: 44, flexShrink: 0 }}
+              >
+                <CloseIcon fontSize="small" />
+              </IconButton>
+            </Box>
+          ))}
+        </List>
+        <Divider />
         <ExtraItemInput
           placeholder={`Add extra ${category.name.toLowerCase()} item`}
           onAdd={(name) => onAddExtra(category.id, name)}
         />
-      </div>
-    </details>
+      </AccordionDetails>
+    </Accordion>
   );
 }

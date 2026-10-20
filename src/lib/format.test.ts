@@ -6,7 +6,6 @@ const sampleList: ShoppingListCategory[] = [
   {
     id: 'pantry',
     name: 'Pantry',
-    icon: '🥫',
     entries: [
       { key: 'pantry::Rice', categoryId: 'pantry', name: 'Rice', isExtra: false },
       { key: 'pantry::Pasta', categoryId: 'pantry', name: 'Pasta', isExtra: false },
@@ -15,7 +14,6 @@ const sampleList: ShoppingListCategory[] = [
   {
     id: 'bathroom',
     name: 'Bathroom',
-    icon: '🛁',
     entries: [
       {
         key: 'bathroom::Toilet paper',
@@ -43,6 +41,23 @@ describe('formatList', () => {
 
     it('returns empty string for an empty list', () => {
       expect(formatList([], 'notes')).toBe('');
+    });
+  });
+
+  describe('appleNotes preset', () => {
+    it('outputs category name then checkbox item lines, blank line between categories', () => {
+      const result = formatList(sampleList, 'appleNotes');
+      expect(result).toBe('Pantry\n☐ Rice\n☐ Pasta\n\nBathroom\n☐ Toilet paper');
+    });
+
+    it('keeps category headers in normal casing (not shouted)', () => {
+      const result = formatList(sampleList, 'appleNotes');
+      expect(result).toContain('Pantry');
+      expect(result).not.toContain('PANTRY');
+    });
+
+    it('returns empty string for an empty list', () => {
+      expect(formatList([], 'appleNotes')).toBe('');
     });
   });
 

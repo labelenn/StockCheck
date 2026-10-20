@@ -4,8 +4,8 @@
   "description": "Tick off what you have, send a shopping list for the rest.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#f8fafc",
-  "theme_color": "#16a34a",
+  "background_color": "#FAF8FC",
+  "theme_color": "#6FA8DC",
   "icons": [
     {
       "src": "/icons/icon-192.png",

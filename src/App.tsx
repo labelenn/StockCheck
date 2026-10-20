@@ -1,29 +1,67 @@
 import { useEffect, useMemo, useState } from 'react';
+import AppBar from '@mui/material/AppBar';
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import Container from '@mui/material/Container';
+import CssBaseline from '@mui/material/CssBaseline';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogContentText from '@mui/material/DialogContentText';
+import DialogTitle from '@mui/material/DialogTitle';
+import IconButton from '@mui/material/IconButton';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import ListItemText from '@mui/material/ListItemText';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
+import Paper from '@mui/material/Paper';
+import Stack from '@mui/material/Stack';
+import Toolbar from '@mui/material/Toolbar';
+import Typography from '@mui/material/Typography';
+import useMediaQuery from '@mui/material/useMediaQuery';
+import { ThemeProvider } from '@mui/material/styles';
+import BrightnessAutoIcon from '@mui/icons-material/BrightnessAuto';
+import CelebrationIcon from '@mui/icons-material/Celebration';
+import CloseIcon from '@mui/icons-material/Close';
+import DarkModeIcon from '@mui/icons-material/DarkMode';
+import LightModeIcon from '@mui/icons-material/LightMode';
+import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import { categories } from './data/items';
 import { STATE_TTL_DAYS, STORAGE_KEY } from './config';
 import { usePersistentState } from './hooks/usePersistentState';
+import { useThemeModePreference } from './hooks/useThemeModePreference';
+import type { ThemeModePreference } from './hooks/useThemeModePreference';
+import { createAppTheme } from './theme';
 import { makeItemKey } from './types';
 import type { Category, ExtraItem, ItemKey, Preset, ShoppingListCategory } from './types';
 import { CategorySection } from './components/CategorySection';
-import { ShoppingListView } from './components/ShoppingListView';
 import { SendPanel } from './components/SendPanel';
 import { Toast } from './components/Toast';
+import type { ToastState } from './components/Toast';
+
+const themeModeOptions: {
+  value: ThemeModePreference;
+  label: string;
+  Icon: typeof LightModeIcon;
+}[] = [
+  { value: 'light', label: 'Light', Icon: LightModeIcon },
+  { value: 'dark', label: 'Dark', Icon: DarkModeIcon },
+  { value: 'system', label: 'System', Icon: BrightnessAutoIcon },
+];
 
 interface AppState {
   checked: Record<ItemKey, boolean>;
   extras: ExtraItem[];
-  basketTicks: Record<ItemKey, boolean>;
   preset: Preset;
 }
 
 const initialState: AppState = {
   checked: {},
   extras: [],
-  basketTicks: {},
   preset: 'notes',
 };
 
-const otherCategory: Category = { id: 'other', name: 'Other', icon: '🧩', items: [] };
+const otherCategory: Category = { id: 'other', name: 'Other', items: [] };
 const sectionCategories = [...categories, otherCategory];
 
 function buildShoppingList(state: AppState): ShoppingListCategory[] {
@@ -41,7 +79,7 @@ function buildShoppingList(state: AppState): ShoppingListCategory[] {
       entries.push({ key: extra.key, categoryId: category.id, name: extra.name, isExtra: true });
     }
     if (entries.length > 0) {
-      result.push({ id: category.id, name: category.name, icon: category.icon, entries });
+      result.push({ id: category.id, name: category.name, entries });
     }
   }
 
@@ -50,7 +88,6 @@ function buildShoppingList(state: AppState): ShoppingListCategory[] {
     result.push({
       id: otherCategory.id,
       name: otherCategory.name,
-      icon: otherCategory.icon,
       entries: otherExtras.map((e) => ({
         key: e.key,
         categoryId: otherCategory.id,
@@ -64,12 +101,24 @@ function buildShoppingList(state: AppState): ShoppingListCategory[] {
 }
 
 export default function App() {
+  const prefersDark = useMediaQuery('(prefers-color-scheme: dark)');
+  const [themeModePreference, setThemeModePreference] = useThemeModePreference();
+  const resolvedMode =
+    themeModePreference === 'system' ? (prefersDark ? 'dark' : 'light') : themeModePreference;
+  const theme = useMemo(() => createAppTheme(resolvedMode), [resolvedMode]);
+  const ThemeModeIcon =
+    themeModeOptions.find((option) => option.value === themeModePreference)?.Icon ??
+    BrightnessAutoIcon;
+
   const [state, setState] = usePersistentState<AppState>(STORAGE_KEY, initialState, {
     ttlDays: STATE_TTL_DAYS,
     onExpire: (expired, initial) => ({ ...initial, preset: expired.preset }),
   });
-  const [stage, setStage] = useState<'check' | 'shopping'>('check');
-  const [toast, setToast] = useState<string | null>(null);
+  const [shoppingOpen, setShoppingOpen] = useState(false);
+  const [toast, setToast] = useState<ToastState | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [themeMenuAnchor, setThemeMenuAnchor] = useState<HTMLElement | null>(null);
+  const fullScreenDialog = useMediaQuery(theme.breakpoints.down('sm'));
 
   useEffect(() => {
     if (!toast) return;
@@ -93,13 +142,6 @@ export default function App() {
     setState((prev) => ({ ...prev, checked: { ...prev.checked, [key]: !prev.checked[key] } }));
   }
 
-  function toggleBasket(key: ItemKey) {
-    setState((prev) => ({
-      ...prev,
-      basketTicks: { ...prev.basketTicks, [key]: !prev.basketTicks[key] },
-    }));
-  }
-
   function addExtra(categoryId: string, name: string) {
     const key = makeItemKey(categoryId, name);
     setState((prev) => {
@@ -112,7 +154,6 @@ export default function App() {
     setState((prev) => ({
       ...prev,
       extras: prev.extras.filter((e) => e.key !== key),
-      basketTicks: Object.fromEntries(Object.entries(prev.basketTicks).filter(([k]) => k !== key)),
     }));
   }
 
@@ -120,52 +161,100 @@ export default function App() {
     setState((prev) => ({ ...prev, preset }));
   }
 
-  function startNewWeek() {
-    const confirmed = window.confirm(
-      'Start a new week? This clears everything you\u2019ve checked off and any extra items you\u2019ve added.',
-    );
-    if (!confirmed) return;
+  function confirmStartNewWeek() {
     setState((prev) => ({ ...initialState, preset: prev.preset }));
-    setStage('check');
-    setToast('Started a new week');
+    setShoppingOpen(false);
+    setConfirmOpen(false);
+    setToast({ message: 'Started a new week', severity: 'success' });
   }
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/90 backdrop-blur dark:border-slate-800 dark:bg-slate-950/90">
-        <div className="mx-auto flex max-w-2xl items-center justify-between gap-3 px-4 py-3">
-          <div className="flex min-w-0 items-center gap-2">
-            <span aria-hidden="true" className="flex-shrink-0 text-2xl">
-              🛒
-            </span>
-            <h1 className="truncate text-lg font-bold text-slate-800 dark:text-slate-100">
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+        <AppBar
+          position="sticky"
+          color="transparent"
+          elevation={0}
+          sx={{ borderBottom: 1, borderColor: 'divider', bgcolor: 'background.paper' }}
+        >
+          <Toolbar sx={{ gap: 1.5 }}>
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: 36,
+                height: 36,
+                borderRadius: '50%',
+                bgcolor: 'primary.main',
+                color: '#fff',
+                flexShrink: 0,
+              }}
+            >
+              <ShoppingCartIcon fontSize="small" />
+            </Box>
+            <Typography variant="h6" noWrap sx={{ color: 'text.primary', flex: 1 }}>
               StockCheck
-            </h1>
-          </div>
-          <div className="flex flex-shrink-0 items-center gap-2 sm:gap-3">
-            <p
-              aria-live="polite"
-              className="whitespace-nowrap text-xs font-medium text-slate-500 sm:text-sm dark:text-slate-400"
+            </Typography>
+            <IconButton
+              aria-label="Theme preference"
+              aria-haspopup="true"
+              onClick={(e) => setThemeMenuAnchor(e.currentTarget)}
+              sx={{ width: 44, height: 44, flexShrink: 0 }}
             >
-              {stage === 'check'
-                ? `${checkedCount}/${totalEssentials} checked`
-                : `${toBuyCount} to buy`}
-            </p>
-            <button
-              type="button"
-              onClick={startNewWeek}
-              className="min-h-9 flex-shrink-0 whitespace-nowrap rounded-lg border border-slate-300 px-2.5 text-xs font-medium text-slate-600 transition-colors hover:bg-slate-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-500 sm:px-3 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-900"
+              <ThemeModeIcon fontSize="small" />
+            </IconButton>
+            <Menu
+              anchorEl={themeMenuAnchor}
+              open={Boolean(themeMenuAnchor)}
+              onClose={() => setThemeMenuAnchor(null)}
+              anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+              transformOrigin={{ vertical: 'top', horizontal: 'right' }}
             >
-              <span className="sm:hidden">New week</span>
-              <span className="hidden sm:inline">Start new week</span>
-            </button>
-          </div>
-        </div>
-      </header>
+              {themeModeOptions.map(({ value, label, Icon }) => (
+                <MenuItem
+                  key={value}
+                  selected={value === themeModePreference}
+                  onClick={() => {
+                    setThemeModePreference(value);
+                    setThemeMenuAnchor(null);
+                  }}
+                >
+                  <ListItemIcon>
+                    <Icon fontSize="small" />
+                  </ListItemIcon>
+                  <ListItemText>{label}</ListItemText>
+                </MenuItem>
+              ))}
+            </Menu>
+          </Toolbar>
+        </AppBar>
 
-      <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-4 pb-28 sm:pb-6">
-        {stage === 'check' ? (
-          <div className="space-y-4">
+        <Container maxWidth="sm" sx={{ flex: 1, py: 2, pb: 12 }}>
+          <Stack
+            direction="row"
+            spacing={1.5}
+            sx={{ alignItems: 'center', justifyContent: 'space-between', mb: 2 }}
+          >
+            <Typography
+              aria-live="polite"
+              variant="body2"
+              color="text.secondary"
+              sx={{ fontWeight: 600, whiteSpace: 'nowrap' }}
+            >
+              {`${checkedCount}/${totalEssentials} checked`}
+            </Typography>
+            <Button
+              variant="outlined"
+              size="small"
+              onClick={() => setConfirmOpen(true)}
+              sx={{ minHeight: 36, whiteSpace: 'nowrap' }}
+            >
+              Start new week
+            </Button>
+          </Stack>
+          <Stack spacing={2}>
             {sectionCategories.map((category) => (
               <CategorySection
                 key={category.id}
@@ -177,17 +266,65 @@ export default function App() {
                 onRemoveExtra={removeExtra}
               />
             ))}
-          </div>
-        ) : (
-          <div className="space-y-4">
-            <ShoppingListView
-              list={shoppingList}
-              basketTicks={state.basketTicks}
-              onToggleBasket={toggleBasket}
-              onRemoveExtra={removeExtra}
-              onBack={() => setStage('check')}
-            />
-            {shoppingList.length > 0 && (
+          </Stack>
+        </Container>
+
+        <Paper
+          elevation={8}
+          square
+          sx={{
+            position: { xs: 'sticky', sm: 'static' },
+            bottom: 0,
+            px: 2,
+            py: 1.5,
+            bgcolor: 'background.paper',
+          }}
+        >
+          <Container maxWidth="sm" disableGutters>
+            <Button
+              variant="contained"
+              fullWidth
+              size="large"
+              onClick={() => setShoppingOpen(true)}
+              sx={{ minHeight: 48, fontSize: '1rem' }}
+            >
+              Generate shopping list
+            </Button>
+          </Container>
+        </Paper>
+
+        <Dialog
+          open={shoppingOpen}
+          onClose={() => setShoppingOpen(false)}
+          fullScreen={fullScreenDialog}
+          fullWidth
+          maxWidth="sm"
+          scroll="paper"
+        >
+          <DialogTitle
+            sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
+          >
+            {`${toBuyCount} to buy`}
+            <IconButton
+              aria-label="Close shopping list"
+              onClick={() => setShoppingOpen(false)}
+              sx={{ width: 44, height: 44, flexShrink: 0 }}
+            >
+              <CloseIcon fontSize="small" />
+            </IconButton>
+          </DialogTitle>
+          <DialogContent dividers sx={{ p: 2 }}>
+            {shoppingList.length === 0 ? (
+              <Stack spacing={1} sx={{ alignItems: 'center', textAlign: 'center', py: 6 }}>
+                <CelebrationIcon sx={{ fontSize: 40, color: 'primary.main' }} />
+                <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                  Nothing to buy!
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 280 }}>
+                  Everything&rsquo;s in stock.
+                </Typography>
+              </Stack>
+            ) : (
               <SendPanel
                 list={shoppingList}
                 preset={state.preset}
@@ -195,25 +332,27 @@ export default function App() {
                 onToast={setToast}
               />
             )}
-          </div>
-        )}
-      </main>
+          </DialogContent>
+        </Dialog>
 
-      {stage === 'check' && (
-        <div className="sticky bottom-0 z-40 border-t border-slate-200 bg-white/95 px-4 py-3 backdrop-blur sm:static sm:border-0 sm:bg-transparent sm:px-0 sm:py-0 dark:border-slate-800 dark:bg-slate-950/95">
-          <div className="mx-auto max-w-2xl">
-            <button
-              type="button"
-              onClick={() => setStage('shopping')}
-              className="min-h-11 w-full rounded-lg bg-emerald-600 px-4 text-base font-semibold text-white shadow-sm transition-colors hover:bg-emerald-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-500"
-            >
-              Generate shopping list
-            </button>
-          </div>
-        </div>
-      )}
+        <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)}>
+          <DialogTitle>Start a new week?</DialogTitle>
+          <DialogContent>
+            <DialogContentText>
+              This clears everything you&rsquo;ve checked off and any extra items you&rsquo;ve
+              added.
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setConfirmOpen(false)}>Cancel</Button>
+            <Button onClick={confirmStartNewWeek} variant="contained" color="error">
+              Start new week
+            </Button>
+          </DialogActions>
+        </Dialog>
 
-      <Toast message={toast} />
-    </div>
+        <Toast toast={toast} onClose={() => setToast(null)} />
+      </Box>
+    </ThemeProvider>
   );
 }

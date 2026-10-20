@@ -1,7 +1,6 @@
 export interface Category {
   id: string;
   name: string;
-  icon: string;
   items: string[];
 }
 
@@ -18,7 +17,7 @@ export interface ExtraItem {
   name: string;
 }
 
-export type Preset = 'notes' | 'messenger' | 'markdown';
+export type Preset = 'notes' | 'appleNotes' | 'messenger' | 'markdown';
 
 export interface ShoppingListEntry {
   key: ItemKey;
@@ -30,6 +29,5 @@ export interface ShoppingListEntry {
 export interface ShoppingListCategory {
   id: string;
   name: string;
-  icon: string;
   entries: ShoppingListEntry[];
 }
