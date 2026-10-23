@@ -7,6 +7,9 @@ import type { Category } from '../types';
  * src/types.ts), so renaming an item will reset its checked state, but
  * reordering items/categories will not.
  *
+ * Category order is the walk-through-the-house order used by the check
+ * wizard (src/components/CheckScreen.tsx) — reordering here changes that flow.
+ *
  * Each category's icon and accent color are looked up by `id` in
  * src/lib/categoryStyles.tsx — add an entry there if you add a new category.
  */
@@ -16,20 +19,17 @@ export const categories: Category[] = [
     name: 'Pantry',
     items: [
       'Rice',
+      'Bread',
       'Cooking oil',
-      'Coconut milk',
-      'Tomato sauce',
-      'Flour',
       'Sugar',
       'Coffee',
       'Ketchup',
-      'Mang Tomas',
       'Soy sauce',
       'Vinegar',
       'Salt',
       'Pepper',
       'Pork/Chicken/Beef cubes',
-      'Sinigang mix',
+      'Pasta',
     ],
   },
   {
@@ -40,10 +40,14 @@ export const categories: Category[] = [
       'Oranges',
       'Onions',
       'Garlic',
+      'Ginger',
       'Tomatoes',
       'Potatoes',
       'Red Chilli',
       'Green Chilli',
+      'Cucumber',
+      'Carrots',
+      'Broccoli',
     ],
   },
   {
@@ -52,9 +56,14 @@ export const categories: Category[] = [
     items: ['Milk', 'Eggs', 'Butter', 'Cheese', 'Mayonnaise'],
   },
   {
+    id: 'freezer',
+    name: 'Freezer',
+    items: ['Pork', 'Chicken', 'Beef', 'Fish'],
+  },
+  {
     id: 'kitchen-supplies',
     name: 'Kitchen Supplies',
-    items: ['Cling roll', 'Aluminium foil', 'Baking paper', 'Zip-lock bags'],
+    items: ['Cling roll', 'Aluminium foil', 'Baking paper', 'Zip-lock bags', 'Garbage bags'],
   },
   {
     id: 'household-cleaning',
@@ -63,9 +72,9 @@ export const categories: Category[] = [
       'Dishwashing liquid',
       'Dishwasher tablets',
       'Sponges',
-      'Bin bags',
       'Paper towels',
       'Glass cleaner',
+      'All-purpose cleaner',
     ],
   },
   {
@@ -76,6 +85,6 @@ export const categories: Category[] = [
   {
     id: 'bathroom',
     name: 'Bathroom',
-    items: ['Shampoo', 'Toothpaste', 'Bar soap', 'Cotton buds', 'Toilet paper'],
+    items: ['Shampoo', 'Toothpaste', 'Bar soap', 'Toilet paper', 'Hand soap', 'Razor'],
   },
 ];

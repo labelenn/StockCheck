@@ -25,6 +25,10 @@ export function formatList(
   }
 }
 
+function entryLabel(entry: { name: string; note?: string }): string {
+  return entry.note ? `${entry.name} (${entry.note})` : entry.name;
+}
+
 /**
  * Plain-text list with a date heading and ALL CAPS category headers —
  * reads well in Notes, Messages, WhatsApp, and other plain-text share targets.
@@ -37,7 +41,7 @@ function formatNotes(list: ShoppingListCategory[], options: FormatOptions): stri
 
   const blocks = list.map((category) => {
     const header = category.name.toUpperCase();
-    const lines = category.entries.map((e) => e.name);
+    const lines = category.entries.map(entryLabel);
     return [header, ...lines].join('\n');
   });
 
@@ -46,7 +50,7 @@ function formatNotes(list: ShoppingListCategory[], options: FormatOptions): stri
 
 function formatMarkdown(list: ShoppingListCategory[]): string {
   const blocks = list.map((category) => {
-    const lines = [`## ${category.name}`, ...category.entries.map((e) => `- [ ] ${e.name}`)];
+    const lines = [`## ${category.name}`, ...category.entries.map((e) => `- [ ] ${entryLabel(e)}`)];
     return lines.join('\n');
   });
   return blocks.join('\n\n');

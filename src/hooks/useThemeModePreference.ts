@@ -33,7 +33,7 @@ export function useThemeModePreference(): [
 ] {
   const [preference, setPreferenceState] = useState<ThemeModePreference>(() => {
     const raw = safeGet(THEME_STORAGE_KEY);
-    return isThemeModePreference(raw) ? raw : 'system';
+    return isThemeModePreference(raw) ? raw : 'light';
   });
 
   useEffect(() => {

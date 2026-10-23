@@ -7,8 +7,8 @@ const sampleList: ShoppingListCategory[] = [
     id: 'pantry',
     name: 'Pantry',
     entries: [
-      { key: 'pantry::Rice', categoryId: 'pantry', name: 'Rice', isExtra: false },
-      { key: 'pantry::Pasta', categoryId: 'pantry', name: 'Pasta', isExtra: false },
+      { key: 'pantry::Rice', categoryId: 'pantry', name: 'Rice', isExtra: false, gotIt: false },
+      { key: 'pantry::Pasta', categoryId: 'pantry', name: 'Pasta', isExtra: false, gotIt: false },
     ],
   },
   {
@@ -20,6 +20,7 @@ const sampleList: ShoppingListCategory[] = [
         categoryId: 'bathroom',
         name: 'Toilet paper',
         isExtra: false,
+        gotIt: false,
       },
     ],
   },
@@ -44,6 +45,27 @@ describe('formatList', () => {
       const result = formatList(sampleList, 'notes', { now: fixedNow });
       const parts = result.split('\n\n');
       expect(parts.length).toBe(3); // heading + 2 categories
+    });
+
+    it('appends a note in parentheses when present', () => {
+      const withNote: ShoppingListCategory[] = [
+        {
+          id: 'pantry',
+          name: 'Pantry',
+          entries: [
+            {
+              key: 'pantry::Milk',
+              categoryId: 'pantry',
+              name: 'Milk',
+              isExtra: true,
+              gotIt: false,
+              note: '2 packs',
+            },
+          ],
+        },
+      ];
+      const result = formatList(withNote, 'notes', { now: fixedNow });
+      expect(result).toContain('Milk (2 packs)');
     });
 
     it('returns empty string for an empty list', () => {

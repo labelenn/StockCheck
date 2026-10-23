@@ -6,9 +6,9 @@ import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import ShareIcon from '@mui/icons-material/Share';
-import type { Preset, ShoppingListCategory } from '../types';
-import { formatList } from '../lib/format';
-import type { ToastState } from './Toast';
+import type { Preset, ShoppingListCategory } from '../../types';
+import { formatList } from '../../lib/format';
+import type { ToastState } from '../layout/Toast';
 import { PresetSwitch } from './PresetSwitch';
 
 interface SendPanelProps {
