@@ -71,7 +71,7 @@ function buildShoppingList(state: AppState): ShoppingListCategory[] {
     const entries: ShoppingListCategory['entries'] = [];
     for (const item of category.items) {
       const key = makeItemKey(category.id, item);
-      if (!state.checked[key]) {
+      if (state.checked[key]) {
         entries.push({ key, categoryId: category.id, name: item, isExtra: false });
       }
     }
@@ -321,7 +321,7 @@ export default function App() {
                   Nothing to buy!
                 </Typography>
                 <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 280 }}>
-                  Everything&rsquo;s in stock.
+                  Tick items you need, then come back here.
                 </Typography>
               </Stack>
             ) : (
