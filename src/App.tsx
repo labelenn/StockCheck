@@ -168,8 +168,6 @@ export default function App() {
           });
         }
       }
-      // Got-it items sink to the bottom of their category.
-      entries.sort((a, b) => Number(a.gotIt) - Number(b.gotIt));
       if (entries.length > 0) {
         result.push({ id: category.id, name: category.name, entries });
       }
@@ -408,7 +406,7 @@ export default function App() {
                     onChange={(e) => setSendOnlyRemaining(e.target.checked)}
                   />
                 }
-                label="Only items not yet Got it"
+                label="Only items not yet ticked"
               />
               <SendPanel
                 list={sendList}
